@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>سامانه هوشمند انتخاب واحد - دانشگاه قم</title>
+    
+    <!-- فونت استاندارد وزیرمتن -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- فریم‌ورک Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Vazirmatn', 'system-ui', 'sans-serif'],
+                        mono: ['Vazirmatn', 'ui-monospace', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- کتابخانه نمودار Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- استایل‌های اختصاصی برنامه -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col justify-between">
+
+<div class="container mx-auto px-4 py-5 max-w-[1520px]">
+    
+    <!-- سربرگ مدرن و شاخص‌های آماری زنده -->
+    <header class="glass-header relative rounded-2xl text-white shadow-xl mb-5 p-5 overflow-hidden border border-indigo-500/20">
+        <div class="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+            <div>
+                <div class="flex items-center gap-3">
+                    <span class="bg-white/10 p-2.5 rounded-2xl backdrop-blur-md border border-white/10 text-2xl shadow-inner">🎓</span>
+                    <div>
+                        <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight">سامانه برنامه‌ریزی و انتخاب واحد دانشگاه قم</h1>
+                        <p class="text-xs text-indigo-200 mt-0.5 font-medium">گزارش ۲۱۲ سیستم بهستان • چیدمان زنده و هوشمند تقویم هفتگی</p>
+                    </div>
+                </div>
+                <p class="text-xs text-slate-300 mt-2 max-w-2xl leading-relaxed">
+                    با استفاده از فیلترهای جنسیت، روزهای هفته و ساعات، درس‌های دلخواه خود را پیدا کرده و با یک کلیک به تقویم اضافه کنید تا بهترین چینش هفتگی بدون تداخل را بسازید.
+                </p>
+            </div>
+            
+            <div class="flex gap-3 self-stretch sm:self-auto justify-center">
+                <div class="bg-white/10 rounded-2xl p-3.5 border border-white/10 text-center min-w-[95px] shadow-inner backdrop-blur-md">
+                    <div class="text-[11px] text-indigo-200 font-bold mb-0.5">تعداد دروس</div>
+                    <div id="statCourseCount" class="text-2xl sm:text-3xl font-black text-sky-400">۰</div>
+                </div>
+                <div class="bg-white/10 rounded-2xl p-3.5 border border-white/10 text-center min-w-[95px] shadow-inner backdrop-blur-md">
+                    <div class="text-[11px] text-indigo-200 font-bold mb-0.5">مجموع واحدها</div>
+                    <div id="statTotalUnits" class="text-2xl sm:text-3xl font-black text-amber-300">۰</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- بخش پایش تداخل‌ها -->
+    <section id="conflictSection" class="no-print mb-4 space-y-2.5">
+        <!-- تداخل‌های قطعی زمانی -->
+        <div id="redConflictBox" class="hidden rounded-xl bg-rose-50 border-r-4 border-rose-600 p-3.5 shadow-sm transition-all">
+            <h3 class="font-black text-rose-900 flex items-center gap-2 text-sm sm:text-base">
+                <span class="text-lg">⛔</span> تداخل قطعی ساعتی در تقویم شناسایی شد!
+                <span id="redCountBadge" class="bg-rose-200 text-rose-800 text-xs px-2.5 py-0.5 rounded-full mr-2 font-bold"></span>
+            </h3>
+            <ul id="redConflictList" class="mt-2 text-xs text-rose-800 list-disc list-inside space-y-1 font-medium max-h-40 overflow-y-auto pr-2"></ul>
+        </div>
+        
+        <!-- هشدار کلاس‌های متوالی -->
+        <div id="yellowWarningBox" class="hidden rounded-xl bg-amber-50 border-r-4 border-amber-500 p-3.5 shadow-sm transition-all">
+            <h3 class="font-black text-amber-900 flex items-center gap-2 text-sm sm:text-base">
+                <span class="text-lg">⚠️</span> کلاس‌های متوالی (بدون استراحت و فرصت تردد)
+                <span id="yellowCountBadge" class="bg-amber-200 text-amber-800 text-xs px-2.5 py-0.5 rounded-full mr-2 font-bold"></span>
+            </h3>
+            <ul id="yellowWarningList" class="mt-2 text-xs text-amber-800 list-disc list-inside space-y-1 font-medium max-h-40 overflow-y-auto pr-2"></ul>
+        </div>
+        
+        <!-- اعلام آمادگی و برنامه بدون تداخل -->
+        <div id="greenSuccessBox" class="hidden rounded-xl bg-emerald-50 border-r-4 border-emerald-500 p-3.5 shadow-sm text-emerald-900 font-black flex items-center gap-2.5 text-xs sm:text-sm">
+            <span class="text-xl">✨</span> زمان‌بندی دروس چیده‌شده در تقویم کاملاً استاندارد و بدون هیچ‌گونه تداخل است!
+        </div>
+    </section>
+
+    <!-- نوار ابزار و مدیریت داده -->
+    <div class="toolbar no-print glass-card rounded-2xl p-3 mb-5 flex flex-wrap gap-2.5 items-center justify-between shadow-sm">
+        <div class="flex flex-wrap items-center gap-2">
+            <button onclick="exportDataToJSON()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-all shadow-sm flex items-center gap-1.5">
+                <span>💾</span> ذخیره بک‌آپ (JSON)
+            </button>
+            
+            <button onclick="document.getElementById('jsonFileInput').click()" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 text-xs font-bold px-3.5 py-2 rounded-xl transition-all shadow-sm flex items-center gap-1.5">
+                <span>📂</span> بارگذاری بک‌آپ
+            </button>
+            <input type="file" id="jsonFileInput" accept=".json,application/json" class="hidden" onchange="handleImportFile(event)">
+            
+            <button onclick="exportToCSV()" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 text-xs font-bold px-3.5 py-2 rounded-xl transition-all shadow-sm flex items-center gap-1.5">
+                <span>📊</span> خروجی اکسل
+            </button>
+            
+            <button onclick="window.print()" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5">
+                <span>🖨️</span> چاپ رسمی
+            </button>
+        </div>
+        
+        <button onclick="showResetAllModal()" class="text-rose-600 hover:bg-rose-50 border border-rose-200 text-xs font-bold px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 mr-auto sm:mr-0">
+            <span>🔄</span> خالی کردن کل تقویم
+        </button>
+    </div>
+
+    <!-- گرید اصلی دو ستونه: سمت راست کاوشگر دروس / سمت چپ تقویم بصری -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        
+        <!-- ستون سمت راست: پنل انتخاب و کاوشگر دروس (عرض ۵ ستون) -->
+        <div id="formContainerCol" class="no-print lg:col-span-5 bg-white rounded-2xl p-4 shadow-sm border border-slate-200">
+            
+            <!-- تب‌های بالای پنل کناری: سوئیچ بین بانک دروس و فرم دستی -->
+            <div class="flex items-center gap-2 p-1 bg-slate-100 rounded-xl mb-3.5">
+                <button type="button" id="btnSideTabBank" onclick="setSidePanelTab('bank')" class="flex-1 py-2 text-xs font-black rounded-xl bg-indigo-600 text-white shadow-sm transition-all flex items-center justify-center gap-1.5">
+                    <span>🔍</span> بانک دروس و فیلترها
+                </button>
+                <button type="button" id="btnSideTabManual" onclick="setSidePanelTab('manual')" class="flex-1 py-2 text-xs font-bold rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all flex items-center justify-center gap-1.5">
+                    <span>➕</span> افزودن دستی درس
+                </button>
+            </div>
+
+            <!-- بخش ۱: بانک دروس و فیلترهای تعاملی -->
+            <div id="sideBankSection" class="space-y-3">
+                <!-- جستجوی متنی -->
+                <div class="relative">
+                    <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">🔍</span>
+                    <input type="text" id="bankSearchInput" oninput="searchBankCourses()" class="w-full pr-9 pl-3 py-2 rounded-xl border border-slate-300 focus:border-indigo-500 outline-none text-xs font-medium bg-slate-50 focus:bg-white transition-all" placeholder="جستجوی درس، استاد، کد درس یا شماره گروه...">
+                </div>
+
+                <!-- فیلتر جنسیت -->
+                <div class="flex items-center gap-1.5 text-xs">
+                    <span class="font-bold text-slate-600 text-[11px] ml-1">جنسیت:</span>
+                    <button type="button" onclick="setBankGenderFilter('all')" id="btnFilterAll" class="gender-btn px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-bold text-xs shadow-sm">همه</button>
+                    <button type="button" onclick="setBankGenderFilter('مرد')" id="btnFilterMale" class="gender-btn px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 font-bold text-xs">👨 برادران</button>
+                    <button type="button" onclick="setBankGenderFilter('زن')" id="btnFilterFemale" class="gender-btn px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 font-bold text-xs">👩 خواهران</button>
+                </div>
+
+                <!-- فیلتر روزهای هفته -->
+                <div class="space-y-1 text-xs">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-600 text-[11px]">روزهای کلاسی:</span>
+                        <button type="button" id="btnClearDayFilters" onclick="clearDayFilters()" class="hidden text-rose-600 hover:underline font-bold text-[11px]">پاک‌سازی</button>
+                    </div>
+                    <div id="dayFilterButtonsContainer" class="flex flex-wrap gap-1"></div>
+                </div>
+
+                <!-- فیلتر بازه زمانی -->
+                <div class="space-y-1 text-xs">
+                    <span class="font-bold text-slate-600 text-[11px]">نوبت زمانی:</span>
+                    <div class="flex flex-wrap gap-1">
+                        <button type="button" onclick="setBankTimeSlotFilter('all')" id="btnSlotAll" class="timeslot-btn px-2 py-1 text-[11px] font-bold rounded-lg bg-indigo-600 text-white shadow-sm">همه</button>
+                        <button type="button" onclick="setBankTimeSlotFilter('morning')" id="btnSlotMorning" class="timeslot-btn px-2 py-1 text-[11px] font-bold rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200">🌅 صبح</button>
+                        <button type="button" onclick="setBankTimeSlotFilter('noon')" id="btnSlotNoon" class="timeslot-btn px-2 py-1 text-[11px] font-bold rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200">☀️ ظهر</button>
+                        <button type="button" onclick="setBankTimeSlotFilter('evening')" id="btnSlotEvening" class="timeslot-btn px-2 py-1 text-[11px] font-bold rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200">🌆 عصر</button>
+                        <button type="button" onclick="setBankTimeSlotFilter('custom')" id="btnSlotCustom" class="timeslot-btn px-2 py-1 text-[11px] font-bold rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200">⚙️ ساعت دلخواه</button>
+                    </div>
+                </div>
+
+                <!-- کنترل‌های ورودی زمان سفارشی -->
+                <div id="customTimeControls" class="hidden flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200 text-xs">
+                    <span class="font-bold text-slate-600 text-[11px]">از:</span>
+                    <input type="time" id="bankCustomStartTime" value="07:30" onchange="updateCustomTimeRange()" class="px-2 py-0.5 rounded border border-slate-300 font-mono text-center text-xs">
+                    <span class="font-bold text-slate-600 text-[11px]">تا:</span>
+                    <input type="time" id="bankCustomEndTime" value="19:30" onchange="updateCustomTimeRange()" class="px-2 py-0.5 rounded border border-slate-300 font-mono text-center text-xs">
+                </div>
+
+                <!-- کلید هوشمند فیلتر فقط دروس بدون تداخل -->
+                <div class="pt-1">
+                    <label class="flex items-center justify-between p-2 rounded-xl bg-emerald-50/80 border border-emerald-200 cursor-pointer hover:bg-emerald-100/70 transition-colors">
+                        <span class="font-bold text-emerald-900 text-xs flex items-center gap-1.5">
+                            <span>✨</span> فقط دروس بدون تداخل با برنامه من
+                        </span>
+                        <input type="checkbox" id="toggleNoConflictOnly" onchange="toggleNoConflictFilter()" class="rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer">
+                    </label>
+                </div>
+
+                <!-- سربرگ نتایج با شمارنده -->
+                <div class="flex items-center justify-between pt-1 border-t border-slate-100 text-xs">
+                    <span class="font-black text-slate-700">لیست دروس ارائه‌شده:</span>
+                    <span id="bankFilterCountBadge" class="bg-indigo-50 text-indigo-700 border border-indigo-100 px-2 py-0.5 rounded-full font-bold text-[11px]"></span>
+                </div>
+
+                <!-- لیست کارت‌های دروس فیلترشده با اسکرول بار زیبا -->
+                <div id="bankResultsContainer" class="max-h-[520px] overflow-y-auto space-y-2.5 pr-1 bg-slate-50/50 p-1.5 rounded-xl border border-slate-200/80"></div>
+            </div>
+
+            <!-- بخش ۲: فرم افزودن دستی درس (مخفی به صورت پیش‌فرض) -->
+            <div id="sideManualSection" class="hidden space-y-3.5">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                    <h2 id="formHeaderTitle" class="text-sm font-black text-slate-800 flex items-center gap-1.5">
+                        <span>➕</span> افزودن درس دستی
+                    </h2>
+                    <span id="editBadge" class="hidden bg-amber-100 text-amber-800 text-[11px] px-2 py-0.5 rounded font-bold">حالت ویرایش</span>
+                </div>
+
+                <form id="courseManageForm" onsubmit="handleCourseFormSubmit(event)" class="space-y-3 text-xs">
+                    <input type="hidden" id="fieldCourseId">
+                    
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">نام درس <span class="text-rose-500">*</span></label>
+                        <input type="text" id="fieldName" required class="w-full px-3 py-1.5 rounded-xl border border-slate-300 focus:border-indigo-500 outline-none bg-slate-50 transition-all font-medium" placeholder="مثال: آزمایشگاه شبکه">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">کد درس</label>
+                            <input type="text" id="fieldCode" class="w-full px-3 py-1.5 rounded-xl border border-slate-300 focus:border-indigo-500 outline-none font-mono text-left bg-slate-50" placeholder="1211091">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">کد گروه</label>
+                            <input type="text" id="fieldGroup" class="w-full px-3 py-1.5 rounded-xl border border-slate-300 focus:border-indigo-500 outline-none font-mono text-left bg-slate-50" placeholder="01">
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">تعداد واحد <span class="text-rose-500">*</span></label>
+                            <input type="number" id="fieldUnits" min="1" max="6" value="3" required class="w-full px-3 py-1.5 rounded-xl border border-slate-300 outline-none bg-slate-50 font-bold text-center">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">روز کلاس <span class="text-rose-500">*</span></label>
+                            <select id="fieldDay" required class="w-full px-3 py-1.5 rounded-xl border border-slate-300 outline-none bg-slate-50 font-bold cursor-pointer">
+                                <option value="شنبه">شنبه</option>
+                                <option value="یک‌شنبه">یک‌شنبه</option>
+                                <option value="دوشنبه">دوشنبه</option>
+                                <option value="سه‌شنبه">سه‌شنبه</option>
+                                <option value="چهارشنبه">چهارشنبه</option>
+                                <option value="پنج‌شنبه">پنج‌شنبه</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">ساعت شروع <span class="text-rose-500">*</span></label>
+                            <input type="time" id="fieldStartTime" value="08:00" required class="w-full px-3 py-1.5 rounded-xl border border-slate-300 outline-none bg-slate-50 font-mono text-center">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">ساعت پایان <span class="text-rose-500">*</span></label>
+                            <input type="time" id="fieldEndTime" value="10:00" required class="w-full px-3 py-1.5 rounded-xl border border-slate-300 outline-none bg-slate-50 font-mono text-center">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">نام استاد / محل کلاس</label>
+                        <input type="text" id="fieldInstructor" class="w-full px-3 py-1.5 rounded-xl border border-slate-300 outline-none bg-slate-50 font-medium" placeholder="اختیاری">
+                    </div>
+                    
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">رنگ کارت در تقویم</label>
+                        <div id="palettePicker" class="flex flex-wrap gap-2"></div>
+                        <input type="hidden" id="fieldColor" value="#4f46e5">
+                    </div>
+                    
+                    <div class="pt-2">
+                        <button type="submit" id="btnSubmitCourse" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black transition-all shadow-md">
+                            ➕ افزودن به تقویم
+                        </button>
+                        <button type="button" id="btnCancelEdit" onclick="cancelFormEditing()" class="hidden w-full py-2 mt-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition-all border border-slate-300">
+                            انصراف از ویرایش
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+
+        <!-- ستون سمت چپ: نماهای برنامه و تقویم بصری هفتگی (عرض ۷ ستون) -->
+        <div id="tableMainCol" class="lg:col-span-7 space-y-4">
+            
+            <!-- نوار تب‌های اصلی -->
+            <div id="tabsNav" class="no-print flex flex-wrap items-center gap-1 border-b-2 border-slate-200">
+                <button onclick="setActiveTab('calendar')" id="tabBtnCalendar" class="tab-btn tab-btn-active px-4 py-2.5 font-black text-xs sm:text-sm rounded-t-xl transition-all">
+                    🗓️ تقویم هفتگی بصری
+                </button>
+                <button onclick="setActiveTab('fastView')" id="tabBtnFast" class="tab-btn text-slate-500 hover:text-slate-800 px-4 py-2.5 font-bold text-xs sm:text-sm rounded-t-xl transition-colors">
+                    ⚡ میز کار سریع (کپی کدها)
+                </button>
+                <button onclick="setActiveTab('weeklyView')" id="tabBtnWeekly" class="tab-btn text-slate-500 hover:text-slate-800 px-4 py-2.5 font-bold text-xs sm:text-sm rounded-t-xl transition-colors">
+                    📊 تحلیل روزانه و نمودارها
+                </button>
+                
+                <button onclick="toggleWideTableMode()" id="btnWideToggle" class="mr-auto my-auto px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-xs font-black transition-all">
+                    ↔️ تمام‌صفحه کردن تقویم
+                </button>
+            </div>
+
+            <!-- تب ۱: تقویم بصری هفتگی (اصلی) -->
+            <div id="panelCalendar" class="space-y-3">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-3.5 overflow-hidden">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+                        <h3 class="font-black text-slate-800 text-sm sm:text-base flex items-center gap-1.5">
+                            <span>🗓️</span> چیدمان هفتگی دروس (۰۷:۳۰ تا ۱۹:۳۰)
+                        </h3>
+                        <div class="flex items-center gap-3 text-xs text-slate-500 font-medium">
+                            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-indigo-600"></span> کلاس‌های شما</span>
+                            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> تداخل زمانی</span>
+                        </div>
+                    </div>
+
+                    <!-- پیام راهنمای تقویم خالی -->
+                    <div id="calendarEmptyNotice" class="p-6 my-2 text-center bg-indigo-50/60 rounded-xl border border-indigo-100">
+                        <span class="text-3xl block mb-2">🗓️</span>
+                        <h4 class="font-black text-indigo-950 text-sm">تقویم انتخاب واحد شما در حال حاضر خالی است</h4>
+                        <p class="text-xs text-indigo-800 mt-1 max-w-lg mx-auto leading-relaxed">
+                            از پنل سمت راست (بانک دروس)، با فیلتر جنسیت، روزهای هفته و ساعات دلخواه، درس‌های مورد نظر را انتخاب کرده و با زدن دکمه <strong>«➕ افزودن به تقویم»</strong>، برنامه هفتگی خود را به صورت زنده بچینید.
+                        </p>
+                    </div>
+
+                    <!-- جعبه اسکرول افقی تقویم -->
+                    <div class="calendar-wrapper bg-slate-50">
+                        <div class="calendar-inner">
+                            <!-- هدر ساعات -->
+                            <div class="flex border border-slate-300 rounded-t-xl bg-slate-800 text-white font-bold text-[11px]">
+                                <div class="w-24 shrink-0 border-l border-slate-600 flex items-center justify-center p-2 text-center text-xs">روز / ساعت</div>
+                                <div class="flex-1 grid divide-x divide-x-reverse divide-slate-600/40" style="grid-template-columns: repeat(12, 1fr);">
+                                    <div class="py-2 text-center font-mono">۰۷:۳۰</div>
+                                    <div class="py-2 text-center font-mono">۰۸:۳۰</div>
+                                    <div class="py-2 text-center font-mono">۰۹:۳۰</div>
+                                    <div class="py-2 text-center font-mono">۱۰:۳۰</div>
+                                    <div class="py-2 text-center font-mono">۱۱:۳۰</div>
+                                    <div class="py-2 text-center font-mono">۱۲:۳۰</div>
+                                    <div class="py-2 text-center font-mono">۱۳:۳۰</div>
+                                    <div class="py-2 text-center font-mono">۱۴:۳۰</div>
+                                    <div class="py-2 text-center font-mono">۱۵:۳۰</div>
+                                    <div class="py-2 text-center font-mono">۱۶:۳۰</div>
+                                    <div class="py-2 text-center font-mono">۱۷:۳۰</div>
+                                    <div class="py-2 text-center font-mono">۱۸:۳۰</div>
+                                </div>
+                            </div>
+                            
+                            <!-- محتوای روزها -->
+                            <div id="matrixDaysContainer" class="border-x border-b border-slate-300 rounded-b-xl bg-white flex flex-col"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- تب ۲: میز کار سریع انتخاب واحد -->
+            <div id="panelFastView" class="hidden space-y-3">
+                <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2">
+                    <span class="text-lg">💡</span>
+                    <span>برای ثبت سریع در سامانه بهستان یا گلستان، کافیست روی کد درس یا کد گروه کلیک کنید تا فوری کپی شود!</span>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="p-3 border-b border-slate-100 flex flex-wrap justify-between items-center bg-slate-50 gap-2">
+                        <h3 class="font-black text-slate-800 text-sm sm:text-base">جدول کدهای سریع</h3>
+                        <div class="relative">
+                            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">🔍</span>
+                            <input type="text" oninput="currentSearchTerm = this.value; renderCheatTable();" placeholder="جستجوی در برنامه..." class="w-48 pl-3 pr-8 py-1 rounded-xl border border-slate-300 text-xs outline-none focus:border-indigo-500 bg-white">
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right text-xs sm:text-sm border-collapse cheat-table whitespace-nowrap min-w-[820px]">
+                            <thead class="bg-slate-800 text-white font-bold text-[12px]">
+                                <tr>
+                                    <th class="w-10 text-center">ردیف</th>
+                                    <th>نام درس</th>
+                                    <th class="text-center">کد درس (کلیک=کپی)</th>
+                                    <th class="text-center">کد گروه (کلیک=کپی)</th>
+                                    <th class="text-center w-10">واحد</th>
+                                    <th>روز و ساعت</th>
+                                    <th>استاد</th>
+                                    <th class="text-center">وضعیت اخذ</th>
+                                    <th class="text-center">عملیات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cheatTableBody" class="divide-y divide-slate-100 bg-white text-slate-700"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- تب ۳: تحلیل روزانه و نمودارها -->
+            <div id="panelWeeklyView" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <!-- تایم‌لاین ایام هفته -->
+                <div class="space-y-3">
+                    <h3 class="font-black text-slate-800 text-sm sm:text-base">📅 برنامه‌ریزی روزانه با محاسبه استراحت</h3>
+                    <div id="dailyScheduleList" class="space-y-2.5"></div>
+                </div>
+                
+                <!-- داشبورد نمودارها -->
+                <div class="space-y-3">
+                    <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200">
+                        <h4 class="font-black text-slate-800 text-xs sm:text-sm mb-2 border-b border-slate-100 pb-1.5">📈 بار کاری در طول هفته (تعداد واحد)</h4>
+                        <div class="h-44 relative"><canvas id="weeklyWorkloadChart"></canvas></div>
+                    </div>
+                    <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200">
+                        <h4 class="font-black text-slate-800 text-xs sm:text-sm mb-2 border-b border-slate-100 pb-1.5">⏰ پراکندگی کلاس‌ها در ساعات روز</h4>
+                        <div class="flex flex-col sm:flex-row items-center gap-3">
+                            <div class="w-32 h-32 relative shrink-0"><canvas id="timeSlotsChart"></canvas></div>
+                            <div id="timeSlotsBreakdown" class="flex-1 w-full text-xs space-y-2 font-medium bg-slate-50 p-3 rounded-xl border border-slate-100"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- مودال مشاهده جزئیات درس (هنگام کلیک روی تقویم) -->
+<div id="courseDetailModal" class="fixed inset-0 bg-slate-900/70 z-[115] flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-200 p-4 backdrop-blur-sm">
+    <div id="courseDetailModalCard" class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl scale-95 transition-transform border border-slate-200">
+        <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
+            <h3 id="courseDetailTitle" class="font-black text-slate-800 text-base"></h3>
+            <button onclick="closeCourseDetailModal()" class="text-2xl text-slate-400 hover:text-rose-600 leading-none">&times;</button>
+        </div>
+        <div id="courseDetailBody"></div>
+        <div class="mt-4 pt-3 border-t border-slate-100 flex justify-end">
+            <button onclick="closeCourseDetailModal()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold">بستن</button>
+        </div>
+    </div>
+</div>
+
+<!-- مودال تأییدیه امنیتی -->
+<div id="confirmModal" class="fixed inset-0 bg-slate-900/70 z-[120] flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-200 p-4 backdrop-blur-sm">
+    <div id="confirmModalCard" class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl scale-95 transition-transform border border-slate-200">
+        <h3 id="confirmModalTitle" class="text-base font-black text-slate-800 mb-2">تأیید عملیات</h3>
+        <p id="confirmModalText" class="text-xs sm:text-sm font-medium text-slate-600 mb-5 leading-relaxed"></p>
+        <div class="flex gap-2.5 justify-end">
+            <button onclick="closeConfirmModal()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors">انصراف</button>
+            <button id="confirmModalOkBtn" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-colors shadow-md">تأیید و انجام</button>
+        </div>
+    </div>
+</div>
+
+<!-- نوتیفیکیشن شناور Toast -->
+<div id="toastNotification" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[130] transition-all duration-300 translate-y-24 opacity-0 pointer-events-none bg-slate-800 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-2.5 text-xs sm:text-sm font-bold border border-slate-700">
+    <span class="text-emerald-400 text-base">✓</span>
+    <span id="toastMessage"></span>
+</div>
+
+<!-- قالب چاپ رسمی A4 افقی -->
+<div class="print-only-container p-6">
+    <div class="border-2 border-slate-900 p-4 mb-4 rounded-xl flex justify-between items-center bg-slate-50">
+        <div>
+            <h1 class="text-lg font-black text-slate-950">برنامه هفتگی دروس انتخابی دانشجو</h1>
+            <p class="text-xs font-bold text-slate-700 mt-1">سامانه هوشمند انتخاب واحد دانشگاه قم • گزارش رسمی</p>
+        </div>
+        <div class="text-left text-xs font-bold space-y-1">
+            <div>تاریخ چاپ: <span id="printFaDate" class="font-normal"></span></div>
+            <div id="printSummaryPill" class="bg-slate-200 px-2.5 py-0.5 rounded border border-slate-300"></div>
+        </div>
+    </div>
+    
+    <table class="official-table text-[12px]">
+        <thead>
+            <tr>
+                <th style="width: 5%">ردیف</th>
+                <th style="width: 22%">نام درس</th>
+                <th style="width: 12%">کد استاندارد</th>
+                <th style="width: 10%">کد گروه</th>
+                <th style="width: 5%">واحد</th>
+                <th style="width: 20%">روز و ساعت کلاس</th>
+                <th style="width: 16%">نام استاد</th>
+                <th style="width: 10%">وضعیت</th>
+            </tr>
+        </thead>
+        <tbody id="printableTableBody" class="font-medium text-slate-800"></tbody>
+    </table>
+    
+    <div class="mt-10 flex justify-around text-xs font-bold text-slate-800">
+        <div class="border-t border-dashed border-slate-400 pt-1.5 w-44 text-center">امضای دانشجو</div>
+        <div class="border-t border-dashed border-slate-400 pt-1.5 w-44 text-center">مهر و امضای اداره آموزش</div>
+    </div>
+</div>
+
+<!-- اسکریپت‌های پروژه -->
+<script src="js/database.js"></script>
+<script src="js/conflict.js"></script>
+<script src="js/calendar.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,214 @@
+/* ==========================================================================
+   سامانه هوشمند برنامه‌ریزی و انتخاب واحد دانشگاه قم
+   استایل‌های اختصاصی، تقویم بصری هفتگی و قالب چاپ A4
+   ========================================================================== */
+
+* {
+    font-family: 'Vazirmatn', system-ui, -apple-system, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    box-sizing: border-box;
+}
+
+/* اسکرول‌بار شیک و مدرن */
+::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+}
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 6px;
+}
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* افکت شیشه‌ای مدرن (Glassmorphism) */
+.glass-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.glass-header {
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+}
+
+/* تب فعال */
+.tab-btn-active {
+    color: #4f46e5 !important;
+    background-color: #ffffff !important;
+    border-bottom: 2px solid #4f46e5 !important;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.03);
+}
+
+/* انیمیشن پالس نرم برای موارد نیازمند توجه */
+@keyframes softPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.92; transform: scale(1.02); }
+}
+
+.has-conflict-pulse {
+    animation: softPulse 2s infinite ease-in-out;
+}
+
+/* ==========================================================================
+   استایل‌های تقویم بصری هفتگی (Visual Weekly Calendar)
+   ========================================================================== */
+.calendar-wrapper {
+    overflow-x: auto;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.calendar-inner {
+    min-width: 960px;
+    background-color: #ffffff;
+}
+
+.time-slot-column {
+    background: repeating-linear-gradient(
+        to left,
+        transparent,
+        transparent calc(100% / 12 - 1px),
+        #f1f5f9 calc(100% / 12 - 1px),
+        #f1f5f9 calc(100% / 12)
+    );
+}
+
+/* کارت درس در تقویم بصری */
+.calendar-card {
+    position: relative;
+    border-radius: 8px;
+    padding: 6px 8px;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.3;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    user-select: none;
+    z-index: 10;
+}
+
+.calendar-card:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+    z-index: 30;
+}
+
+/* کارت در صورت داشتن تداخل */
+.calendar-card-conflict {
+    border: 2px solid #e11d48 !important;
+    background-image: repeating-linear-gradient(
+        -45deg,
+        rgba(225, 29, 72, 0.15),
+        rgba(225, 29, 72, 0.15) 8px,
+        transparent 8px,
+        transparent 16px
+    );
+}
+
+/* جدول میز کار سریع */
+.cheat-table th, .cheat-table td {
+    padding: 12px 14px;
+}
+
+/* دکمه کپی فوری */
+.copy-btn {
+    transition: all 0.15s ease-in-out;
+}
+.copy-btn:hover {
+    transform: scale(1.03);
+}
+.copy-btn:active {
+    transform: scale(0.97);
+    background-color: #10b981 !important;
+    color: #ffffff !important;
+}
+
+/* ==========================================================================
+   قالب چاپ اختصاصی و رسمی (A4 Landscape Print)
+   ========================================================================== */
+@media print {
+    @page {
+        size: A4 landscape;
+        margin: 8mm;
+    }
+
+    html, body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        font-size: 9.5pt !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* پنهان‌سازی عناصر واسط کاربری، فرم‌ها، فیلترها و دکمه‌ها در پرینت */
+    body > .container,
+    .no-print,
+    #toastNotification,
+    #confirmModal,
+    #courseModal,
+    header,
+    nav,
+    .toolbar,
+    #filterContainer,
+    #formSection {
+        display: none !important;
+    }
+
+    .print-only-container {
+        display: block !important;
+        width: 100% !important;
+    }
+
+    .official-table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        border: 2px solid #000000 !important;
+        margin-top: 15px;
+    }
+
+    .official-table th {
+        background-color: #f1f5f9 !important;
+        border: 1px solid #000000 !important;
+        padding: 6px 8px !important;
+        font-weight: 800 !important;
+        text-align: center !important;
+        color: #000000 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .official-table td {
+        border: 1px solid #000000 !important;
+        padding: 6px 8px !important;
+        text-align: center !important;
+        color: #000000 !important;
+    }
+
+    .official-table tr:nth-child(even) td {
+        background-color: #f8fafc !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}
+
+@media screen {
+    .print-only-container {
+        display: none !important;
+    }
+}
+
