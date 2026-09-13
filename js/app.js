@@ -39,6 +39,7 @@ const bankFilters = {
 function appInit() {
     setupColorPicker();
     setupDayFilterButtons();
+    renderManualSessions();
     loadPersistedData();
     setupDragAndDrop();
     refreshViews();
@@ -811,15 +812,115 @@ function addCourseFromBank(code, group) {
     showToast(`درس «${source.name}» به تقویم هفتگی افزوده شد.`);
 }
 
+let manualSessions = [
+    { day: "شنبه", startTime: "08:00", endTime: "10:00" }
+];
+
 /**
- * حذف مستقیم یک درس از روی تقویم یا دکمه سریع
+ * رندر ردیف‌های جلسات کلاسی در فرم دستی
+ */
+function renderManualSessions() {
+    const container = document.getElementById("manualSessionsList");
+    if (!container) return;
+
+    if (!manualSessions || manualSessions.length === 0) {
+        manualSessions = [{ day: "شنبه", startTime: "08:00", endTime: "10:00" }];
+    }
+
+    let html = "";
+    manualSessions.forEach((s, idx) => {
+        const canDelete = manualSessions.length > 1;
+        html += `
+            <div class="manual-session-row bg-slate-50 p-2.5 rounded-xl border border-slate-200 space-y-1.5">
+                <div class="flex items-center justify-between text-[11px] font-bold text-slate-700">
+                    <span class="flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-600"></span>
+                        جلسه ${toFa(idx + 1)} ${idx === 0 ? '<span class="text-[10px] text-slate-400 font-normal mr-1">(جلسه اصلی)</span>' : ''}
+                    </span>
+                    ${canDelete ? `
+                        <button type="button" onclick="removeManualSessionRow(${idx})" class="text-rose-500 hover:text-rose-700 hover:bg-rose-50 px-1.5 py-0.5 rounded text-[10px] font-bold transition-colors flex items-center gap-1" title="حذف این جلسه">
+                            <span>🗑️</span> حذف این جلسه
+                        </button>
+                    ` : ''}
+                </div>
+                <div class="grid grid-cols-12 gap-1.5 items-center">
+                    <div class="col-span-5">
+                        <label class="block text-[9px] font-bold text-slate-500 mb-0.5">روز هفته</label>
+                        <select onchange="manualSessions[${idx}].day = this.value" class="w-full px-1.5 py-1 rounded-lg border border-slate-300 outline-none bg-white font-bold cursor-pointer text-xs">
+                            <option value="شنبه" ${s.day === 'شنبه' ? 'selected' : ''}>شنبه</option>
+                            <option value="یک‌شنبه" ${s.day === 'یک‌شنبه' ? 'selected' : ''}>یک‌شنبه</option>
+                            <option value="دوشنبه" ${s.day === 'دوشنبه' ? 'selected' : ''}>دوشنبه</option>
+                            <option value="سه‌شنبه" ${s.day === 'سه‌شنبه' ? 'selected' : ''}>سه‌شنبه</option>
+                            <option value="چهارشنبه" ${s.day === 'چهارشنبه' ? 'selected' : ''}>چهارشنبه</option>
+                            <option value="پنج‌شنبه" ${s.day === 'پنج‌شنبه' ? 'selected' : ''}>پنج‌شنبه</option>
+                        </select>
+                    </div>
+                    <div class="col-span-3">
+                        <label class="block text-[9px] font-bold text-slate-500 mb-0.5">شروع</label>
+                        <input type="time" value="${s.startTime}" onchange="manualSessions[${idx}].startTime = this.value" required class="w-full px-1 py-1 rounded-lg border border-slate-300 outline-none bg-white font-mono text-center text-xs">
+                    </div>
+                    <div class="col-span-1 text-center text-slate-400 font-bold pt-3 text-[10px]">تا</div>
+                    <div class="col-span-3">
+                        <label class="block text-[9px] font-bold text-slate-500 mb-0.5">پایان</label>
+                        <input type="time" value="${s.endTime}" onchange="manualSessions[${idx}].endTime = this.value" required class="w-full px-1 py-1 rounded-lg border border-slate-300 outline-none bg-white font-mono text-center text-xs">
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+
+function addManualSessionRow(day = "", startTime = "", endTime = "") {
+    if (manualSessions.length === 1 && !day) {
+        const firstDay = manualSessions[0].day;
+        if (firstDay === "شنبه") day = "دوشنبه";
+        else if (firstDay === "یک‌شنبه") day = "سه‌شنبه";
+        else if (firstDay === "دوشنبه") day = "چهارشنبه";
+        else day = "شنبه";
+        startTime = manualSessions[0].startTime;
+        endTime = manualSessions[0].endTime;
+    }
+    manualSessions.push({
+        day: day || "دوشنبه",
+        startTime: startTime || "08:00",
+        endTime: endTime || "10:00"
+    });
+    renderManualSessions();
+}
+
+function removeManualSessionRow(index) {
+    if (manualSessions.length > 1) {
+        manualSessions.splice(index, 1);
+        renderManualSessions();
+    }
+}
+
+/**
+ * حذف مستقیم یک درس از روی تقویم یا دکمه سریع (همراه با تمامی جلسات متصل به آن)
  */
 function removeCourseDirectly(id) {
     const course = courseList.find(c => c.id === id);
-    const courseName = course ? course.name : "درس";
-    courseList = courseList.filter(c => c.id !== id);
+    if (!course) return;
+    const baseName = course.name.replace(/\s*\(جلسه\s*[۰-۹\d]+\)/g, "").trim();
+
+    // شناسایی تمام جلسات مربوط به این درس
+    let toRemove = [id];
+    courseList.forEach(c => {
+        const cBaseName = c.name.replace(/\s*\(جلسه\s*[۰-۹\d]+\)/g, "").trim();
+        if (c.id !== id) {
+            if ((course.groupId && c.groupId === course.groupId) ||
+                (course.code && c.code === course.code && c.group === course.group) ||
+                (cBaseName === baseName && c.group === course.group && course.group)) {
+                toRemove.push(c.id);
+            }
+        }
+    });
+
+    courseList = courseList.filter(c => !toRemove.includes(c.id));
     refreshViews();
-    showToast(`«${courseName}» از تقویم برداشته شد.`);
+    showToast(`«${baseName}» از تقویم برداشته شد.`);
 }
 
 /**
@@ -859,45 +960,152 @@ function setSidePanelTab(tab) {
         if (tabManualBtn) {
             tabManualBtn.className = "flex-1 py-2 text-xs font-black rounded-xl bg-indigo-600 text-white shadow-sm transition-all";
         }
+        renderManualSessions();
     }
 }
 
 /**
- * مدیریت فرم افزودن / ویرایش دستی درس
+ * مدیریت فرم افزودن / ویرایش دستی درس (پشتیبانی از چندین جلسه و چند روز مختلف)
  */
 function handleCourseFormSubmit(e) {
     e.preventDefault();
     const id = document.getElementById("fieldCourseId").value;
-    const obj = {
-        name: document.getElementById("fieldName").value.trim(),
-        code: toEn(document.getElementById("fieldCode").value.trim()),
-        group: toEn(document.getElementById("fieldGroup").value.trim()),
-        units: document.getElementById("fieldUnits").value,
-        day: document.getElementById("fieldDay").value,
-        startTime: document.getElementById("fieldStartTime").value,
-        endTime: document.getElementById("fieldEndTime").value,
-        instructor: document.getElementById("fieldInstructor").value.trim(),
-        color: document.getElementById("fieldColor").value || "#4f46e5",
-        status: "در انتظار"
-    };
+    const name = document.getElementById("fieldName").value.trim();
+    const code = toEn(document.getElementById("fieldCode").value.trim());
+    const group = toEn(document.getElementById("fieldGroup").value.trim());
+    const units = document.getElementById("fieldUnits").value;
+    const instructor = document.getElementById("fieldInstructor").value.trim();
+    const color = document.getElementById("fieldColor").value || "#4f46e5";
 
-    if (timeToMinutes(obj.startTime) >= timeToMinutes(obj.endTime)) {
-        showToast("⚠️ خطا: ساعت پایان باید بعد از ساعت شروع باشد.");
+    // همگام‌سازی مقادیر از اینپوت‌های ردیف‌های جلسات
+    const sessionRows = document.querySelectorAll(".manual-session-row");
+    if (sessionRows.length > 0) {
+        manualSessions = [];
+        sessionRows.forEach(row => {
+            const day = row.querySelector("select").value;
+            const timeInputs = row.querySelectorAll("input[type='time']");
+            const startTime = timeInputs[0].value;
+            const endTime = timeInputs[1].value;
+            manualSessions.push({ day, startTime, endTime });
+        });
+    }
+
+    if (manualSessions.length === 0) {
+        showToast("⚠️ لطفاً حداقل یک جلسه کلاسی مشخص کنید.");
         return;
     }
 
-    if (id) {
-        const index = courseList.findIndex(c => c.id == id);
-        if (index > -1) {
-            obj.id = parseInt(id, 10);
-            obj.status = courseList[index].status;
-            courseList[index] = obj;
+    // اعتبارسنجی ساعات تمام جلسات
+    for (let i = 0; i < manualSessions.length; i++) {
+        const s = manualSessions[i];
+        if (timeToMinutes(s.startTime) >= timeToMinutes(s.endTime)) {
+            showToast(`⚠️ خطا در جلسه ${toFa(i + 1)}: ساعت پایان (${toFa(s.endTime)}) باید بعد از ساعت شروع (${toFa(s.startTime)}) باشد.`);
+            return;
         }
-        showToast("تغییرات درس با موفقیت ذخیره شد.");
+    }
+
+    const cleanName = name.replace(/\s*\(جلسه\s*[۰-۹\d]+\)/g, "").trim();
+
+    if (id) {
+        // در حالت ویرایش: حذف جلسات قبلی این درس و ثبت جلسات جدید
+        const currentCourse = courseList.find(c => c.id == id);
+        let relatedIds = [parseInt(id, 10)];
+
+        if (currentCourse) {
+            const baseName = currentCourse.name.replace(/\s*\(جلسه\s*[۰-۹\d]+\)/g, "").trim();
+            courseList.forEach(c => {
+                const cBaseName = c.name.replace(/\s*\(جلسه\s*[۰-۹\d]+\)/g, "").trim();
+                if (c.id != id) {
+                    if ((currentCourse.groupId && c.groupId === currentCourse.groupId) ||
+                        (currentCourse.code && c.code === currentCourse.code && c.group === currentCourse.group) ||
+                        (cBaseName === baseName && c.group === currentCourse.group)) {
+                        relatedIds.push(c.id);
+                    }
+                }
+            });
+        }
+
+        const sharedGroupId = currentCourse && currentCourse.groupId ? currentCourse.groupId : Date.now();
+        const existingStatus = currentCourse ? currentCourse.status : "در انتظار";
+
+        // حذف جلسات قدیمی
+        courseList = courseList.filter(c => !relatedIds.includes(c.id));
+
+        // افزودن جلسات به‌روزشده
+        if (manualSessions.length === 1) {
+            courseList.push({
+                id: parseInt(id, 10),
+                name: cleanName,
+                code,
+                group,
+                units: String(units),
+                day: manualSessions[0].day,
+                startTime: manualSessions[0].startTime,
+                endTime: manualSessions[0].endTime,
+                instructor,
+                color,
+                status: existingStatus,
+                groupId: sharedGroupId
+            });
+        } else {
+            manualSessions.forEach((s, idx) => {
+                courseList.push({
+                    id: idx === 0 ? parseInt(id, 10) : Date.now() + idx,
+                    name: `${cleanName} (جلسه ${toFa(idx + 1)})`,
+                    code,
+                    group,
+                    units: idx === 0 ? String(units) : "0",
+                    day: s.day,
+                    startTime: s.startTime,
+                    endTime: s.endTime,
+                    instructor,
+                    color,
+                    status: existingStatus,
+                    groupId: sharedGroupId
+                });
+            });
+        }
+
+        showToast("تغییرات درس و جلسات با موفقیت ذخیره شد.");
     } else {
-        obj.id = Date.now();
-        courseList.push(obj);
-        showToast("درس جدید به تقویم اضافه شد.");
+        // افزودن درس جدید با یک یا چند جلسه
+        const sharedGroupId = Date.now();
+
+        if (manualSessions.length === 1) {
+            courseList.push({
+                id: Date.now(),
+                name: cleanName,
+                code,
+                group,
+                units: String(units),
+                day: manualSessions[0].day,
+                startTime: manualSessions[0].startTime,
+                endTime: manualSessions[0].endTime,
+                instructor,
+                color,
+                status: "در انتظار",
+                groupId: sharedGroupId
+            });
+        } else {
+            manualSessions.forEach((s, idx) => {
+                courseList.push({
+                    id: Date.now() + idx,
+                    name: `${cleanName} (جلسه ${toFa(idx + 1)})`,
+                    code,
+                    group,
+                    units: idx === 0 ? String(units) : "0",
+                    day: s.day,
+                    startTime: s.startTime,
+                    endTime: s.endTime,
+                    instructor,
+                    color,
+                    status: "در انتظار",
+                    groupId: sharedGroupId
+                });
+            });
+        }
+
+        showToast(`درس «${cleanName}» با ${toFa(manualSessions.length)} جلسه به تقویم افزوده شد.`);
     }
 
     cancelFormEditing();
@@ -910,18 +1118,46 @@ function editCourse(id) {
 
     setSidePanelTab('manual');
 
+    // جستجوی تمام جلسات متعلق به این درس
+    const baseName = c.name.replace(/\s*\(جلسه\s*[۰-۹\d]+\)/g, "").trim();
+    let relatedSessions = courseList.filter(item => {
+        if (c.groupId && item.groupId === c.groupId) return true;
+        if (c.code && item.code === c.code && item.group === c.group) return true;
+        const itemBaseName = item.name.replace(/\s*\(جلسه\s*[۰-۹\d]+\)/g, "").trim();
+        return itemBaseName === baseName && item.group === c.group;
+    });
+
+    if (relatedSessions.length === 0) relatedSessions = [c];
+
+    // مرتب‌سازی جلسات بر اساس روز و ساعت
+    relatedSessions.sort((a, b) => {
+        if (dayOrderMap[a.day] !== dayOrderMap[b.day]) {
+            return (dayOrderMap[a.day] || 9) - (dayOrderMap[b.day] || 9);
+        }
+        return timeToMinutes(a.startTime) - timeToMinutes(b.startTime);
+    });
+
+    // بارگذاری جلسات در آرایه فرم دستی
+    manualSessions = relatedSessions.map(s => ({
+        day: s.day,
+        startTime: s.startTime,
+        endTime: s.endTime
+    }));
+
+    renderManualSessions();
+
     document.getElementById("fieldCourseId").value = c.id;
-    document.getElementById("fieldName").value = c.name;
+    document.getElementById("fieldName").value = baseName;
     document.getElementById("fieldCode").value = c.code || '';
     document.getElementById("fieldGroup").value = c.group || '';
-    document.getElementById("fieldUnits").value = c.units;
-    document.getElementById("fieldDay").value = c.day;
-    document.getElementById("fieldStartTime").value = c.startTime;
-    document.getElementById("fieldEndTime").value = c.endTime;
+
+    // واحد درس را از جلسه‌ای که واحد بزرگتر از صفر دارد برمی‌داریم
+    const sessionWithUnits = relatedSessions.find(s => parseInt(s.units, 10) > 0) || c;
+    document.getElementById("fieldUnits").value = sessionWithUnits.units || "3";
     document.getElementById("fieldInstructor").value = c.instructor || '';
     document.getElementById("fieldColor").value = c.color;
 
-    document.getElementById("formHeaderTitle").innerHTML = "<span>✏️</span> ویرایش مشخصات درس";
+    document.getElementById("formHeaderTitle").innerHTML = "<span>✏️</span> ویرایش مشخصات و جلسات درس";
     document.getElementById("btnSubmitCourse").innerText = "💾 ذخیره تغییرات";
     document.getElementById("btnSubmitCourse").classList.replace("bg-indigo-600", "bg-emerald-600");
     document.getElementById("btnSubmitCourse").classList.replace("hover:bg-indigo-700", "hover:bg-emerald-700");
@@ -949,11 +1185,14 @@ function cancelFormEditing() {
     if (form) form.reset();
     document.getElementById("fieldCourseId").value = "";
     document.getElementById("formHeaderTitle").innerHTML = "<span>➕</span> افزودن درس دستی";
-    document.getElementById("btnSubmitCourse").innerText = "➕ افزودن به برنامه";
+    document.getElementById("btnSubmitCourse").innerText = "➕ افزودن به تقویم";
     document.getElementById("btnSubmitCourse").classList.replace("bg-emerald-600", "bg-indigo-600");
     document.getElementById("btnSubmitCourse").classList.replace("hover:bg-emerald-700", "hover:bg-indigo-700");
     document.getElementById("editBadge").classList.add("hidden");
     document.getElementById("btnCancelEdit").classList.add("hidden");
+
+    manualSessions = [{ day: "شنبه", startTime: "08:00", endTime: "10:00" }];
+    renderManualSessions();
 
     const picker = document.getElementById("palettePicker");
     if (picker && picker.children.length > 0) picker.children[0].click();
@@ -1269,6 +1508,9 @@ window.handleImportFile = handleImportFile;
 window.exportToCSV = exportToCSV;
 window.copyData = copyData;
 window.updateCourseStatus = updateCourseStatus;
+window.addManualSessionRow = addManualSessionRow;
+window.removeManualSessionRow = removeManualSessionRow;
+window.renderManualSessions = renderManualSessions;
 
 // راه‌اندازی پس از بارگذاری صفحه
 window.onload = appInit;
