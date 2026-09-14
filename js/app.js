@@ -590,8 +590,11 @@ function searchBankCourses() {
     const query = searchInput ? toEn(searchInput.value.trim().toLowerCase()) : "";
     const container = document.getElementById("bankResultsContainer");
     if (!container || !window.boostanDB) return;
+    const db = window.boostanDB || (typeof boostanDB !== 'undefined' ? boostanDB : null);
+    if (!container || !db) return;
 
     let filtered = window.boostanDB.filter(c => {
+    let filtered = db.filter(c => {
         // ۱. فیلتر جنسیت
         if (bankFilters.gender !== 'all' && c.gender !== bankFilters.gender) return false;
 
@@ -746,6 +749,9 @@ function searchBankCourses() {
 function addCourseFromBank(code, group) {
     if (!window.boostanDB) return;
     const source = window.boostanDB.find(c => c.code === code && c.group === group);
+    const db = window.boostanDB || (typeof boostanDB !== 'undefined' ? boostanDB : null);
+    if (!db) return;
+    const source = db.find(c => c.code === code && c.group === group);
     if (!source) return;
 
     if (courseList.some(c => c.code === code && c.group === group)) {

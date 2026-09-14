@@ -3185,3 +3185,10 @@ const boostanDB = [
         ]
     }
 ];
+
+if (typeof window !== 'undefined') {
+    window.boostanDB = boostanDB;
+}
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = boostanDB;
+}
