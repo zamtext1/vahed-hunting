@@ -276,29 +276,6 @@ const boostanDB = [
         ]
     },
     {
-        "name": "هوش مصنوعی و تحول دیجیتال",
-        "code": "1211093",
-        "group": "71",
-        "units": 2,
-        "practicalUnits": 0,
-        "capacity": 30,
-        "gender": "زن",
-        "instructor": "بذرافشان رمضانعلی",
-        "day": "دوشنبه",
-        "startTime": "08:00",
-        "endTime": "10:00",
-        "exam": "1405/11/03 ساعت 10:30 تا 12:30",
-        "sessions": [
-            {
-                "day": "دوشنبه",
-                "startTime": "08:00",
-                "endTime": "10:00",
-                "type": "تئوری",
-                "parity": ""
-            }
-        ]
-    },
-    {
         "name": "فارسی عمومی",
         "code": "1212037",
         "group": "23",
@@ -415,6 +392,75 @@ const boostanDB = [
                 "day": "چهارشنبه",
                 "startTime": "13:30",
                 "endTime": "16:30",
+                "type": "تئوری",
+                "parity": ""
+            }
+        ]
+    },
+    {
+        "name": "مهارت های زندگی",
+        "code": "1212061",
+        "group": "30",
+        "units": 2,
+        "practicalUnits": 0,
+        "capacity": 35,
+        "gender": "مرد",
+        "instructor": "تیمورزادگان ابراهیم",
+        "day": "سه‌شنبه",
+        "startTime": "15:30",
+        "endTime": "17:30",
+        "exam": "1405/10/28 ساعت 14:00 تا 16:00",
+        "sessions": [
+            {
+                "day": "سه‌شنبه",
+                "startTime": "15:30",
+                "endTime": "17:30",
+                "type": "تئوری",
+                "parity": ""
+            }
+        ]
+    },
+    {
+        "name": "مهارت های زندگی",
+        "code": "1212061",
+        "group": "40",
+        "units": 2,
+        "practicalUnits": 0,
+        "capacity": 30,
+        "gender": "مرد",
+        "instructor": "دوخایی پیمان",
+        "day": "یک‌شنبه",
+        "startTime": "13:30",
+        "endTime": "15:30",
+        "exam": "1405/10/28 ساعت 14:00 تا 16:00",
+        "sessions": [
+            {
+                "day": "یک‌شنبه",
+                "startTime": "13:30",
+                "endTime": "15:30",
+                "type": "تئوری",
+                "parity": ""
+            }
+        ]
+    },
+    {
+        "name": "مهارت های زندگی",
+        "code": "1212061",
+        "group": "41",
+        "units": 2,
+        "practicalUnits": 0,
+        "capacity": 30,
+        "gender": "زن",
+        "instructor": "حسن زاده مرتضی",
+        "day": "سه‌شنبه",
+        "startTime": "10:00",
+        "endTime": "12:00",
+        "exam": "1405/10/28 ساعت 14:00 تا 16:00",
+        "sessions": [
+            {
+                "day": "سه‌شنبه",
+                "startTime": "10:00",
+                "endTime": "12:00",
                 "type": "تئوری",
                 "parity": ""
             }
@@ -691,6 +737,29 @@ const boostanDB = [
                 "day": "شنبه",
                 "startTime": "10:00",
                 "endTime": "12:00",
+                "type": "عملی",
+                "parity": ""
+            }
+        ]
+    },
+    {
+        "name": "ورزش ۱",
+        "code": "1212067",
+        "group": "31",
+        "units": 1,
+        "practicalUnits": 1,
+        "capacity": 20,
+        "gender": "مرد",
+        "instructor": "وزیری حرمی محسن",
+        "day": "یک‌شنبه",
+        "startTime": "13:30",
+        "endTime": "15:30",
+        "exam": "",
+        "sessions": [
+            {
+                "day": "یک‌شنبه",
+                "startTime": "13:30",
+                "endTime": "15:30",
                 "type": "عملی",
                 "parity": ""
             }
@@ -2634,7 +2703,7 @@ const boostanDB = [
         "group": "80",
         "units": 2,
         "practicalUnits": 0,
-        "capacity": 35,
+        "capacity": 23,
         "gender": "زن",
         "instructor": "شجاعی محمد",
         "day": "شنبه",
@@ -2657,7 +2726,7 @@ const boostanDB = [
         "group": "81",
         "units": 2,
         "practicalUnits": 0,
-        "capacity": 30,
+        "capacity": 23,
         "gender": "زن",
         "instructor": "شجاعی محمد",
         "day": "شنبه",
@@ -2680,7 +2749,7 @@ const boostanDB = [
         "group": "82",
         "units": 2,
         "practicalUnits": 0,
-        "capacity": 30,
+        "capacity": 23,
         "gender": "زن",
         "instructor": "شاهرخی سیدحامد",
         "day": "چهارشنبه",
@@ -2907,6 +2976,29 @@ const boostanDB = [
     {
         "name": "زبان تخصصی",
         "code": "1316040",
+        "group": "05",
+        "units": 2,
+        "practicalUnits": 0,
+        "capacity": 35,
+        "gender": "مرد",
+        "instructor": "عسگری حسین علی",
+        "day": "سه‌شنبه",
+        "startTime": "15:30",
+        "endTime": "17:30",
+        "exam": "1405/10/27 ساعت 10:30 تا 12:30",
+        "sessions": [
+            {
+                "day": "سه‌شنبه",
+                "startTime": "15:30",
+                "endTime": "17:30",
+                "type": "تئوری",
+                "parity": ""
+            }
+        ]
+    },
+    {
+        "name": "زبان تخصصی",
+        "code": "1316040",
         "group": "80",
         "units": 2,
         "practicalUnits": 0,
@@ -3035,10 +3127,40 @@ const boostanDB = [
     {
         "name": "معادلات دیفرانسیل",
         "code": "1316098",
+        "group": "05",
+        "units": 3,
+        "practicalUnits": 0,
+        "capacity": 17,
+        "gender": "مرد",
+        "instructor": "میرزایی ازندریانی مرتضی",
+        "day": "دوشنبه و یک‌شنبه",
+        "startTime": "13:30",
+        "endTime": "15:30",
+        "exam": "1405/10/23 ساعت 08:00 تا 10:00",
+        "sessions": [
+            {
+                "day": "دوشنبه",
+                "startTime": "13:30",
+                "endTime": "15:30",
+                "type": "تئوری",
+                "parity": "ز"
+            },
+            {
+                "day": "یک‌شنبه",
+                "startTime": "08:00",
+                "endTime": "10:00",
+                "type": "تئوری",
+                "parity": ""
+            }
+        ]
+    },
+    {
+        "name": "معادلات دیفرانسیل",
+        "code": "1316098",
         "group": "80",
         "units": 3,
         "practicalUnits": 0,
-        "capacity": 40,
+        "capacity": 38,
         "gender": "زن",
         "instructor": "نادری محمدحسن",
         "day": "دوشنبه و سه‌شنبه",
@@ -3061,31 +3183,5 @@ const boostanDB = [
                 "parity": ""
             }
         ]
-    },
-    {
-        "name": "اخلاق مهندسی",
-        "code": "1316099",
-        "group": "05",
-        "units": 2,
-        "practicalUnits": 0,
-        "capacity": 35,
-        "gender": "مرد",
-        "instructor": "شیردل غلامحسن",
-        "day": "دوشنبه",
-        "startTime": "08:00",
-        "endTime": "10:00",
-        "exam": "1405/11/03 ساعت 10:30 تا 12:30",
-        "sessions": [
-            {
-                "day": "دوشنبه",
-                "startTime": "08:00",
-                "endTime": "10:00",
-                "type": "تئوری",
-                "parity": ""
-            }
-        ]
     }
 ];
-if (typeof window !== 'undefined') {
-    window.boostanDB = boostanDB;
-}
