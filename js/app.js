@@ -589,11 +589,13 @@ function searchBankCourses() {
     const searchInput = document.getElementById("bankSearchInput");
     const query = searchInput ? toEn(searchInput.value.trim().toLowerCase()) : "";
     const container = document.getElementById("bankResultsContainer");
-    if (!container || !window.boostanDB) return;
+    if (!container) return;
     const db = window.boostanDB || (typeof boostanDB !== 'undefined' ? boostanDB : null);
-    if (!container || !db) return;
+    if (!db) {
+        setTimeout(searchBankCourses, 100);
+        return;
+    }
 
-    let filtered = window.boostanDB.filter(c => {
     let filtered = db.filter(c => {
         // ۱. فیلتر جنسیت
         if (bankFilters.gender !== 'all' && c.gender !== bankFilters.gender) return false;
@@ -747,8 +749,6 @@ function searchBankCourses() {
  * افزودن درس از بانک به برنامه
  */
 function addCourseFromBank(code, group) {
-    if (!window.boostanDB) return;
-    const source = window.boostanDB.find(c => c.code === code && c.group === group);
     const db = window.boostanDB || (typeof boostanDB !== 'undefined' ? boostanDB : null);
     if (!db) return;
     const source = db.find(c => c.code === code && c.group === group);
@@ -1518,5 +1518,13 @@ window.addManualSessionRow = addManualSessionRow;
 window.removeManualSessionRow = removeManualSessionRow;
 window.renderManualSessions = renderManualSessions;
 
-// راه‌اندازی پس از بارگذاری صفحه
-window.onload = appInit;
+// راه‌اندازی سریع و مستقل از CDNها
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", appInit);
+} else {
+    appInit();
+}
+window.addEventListener("load", () => {
+    searchBankCourses();
+    refreshViews();
+});
